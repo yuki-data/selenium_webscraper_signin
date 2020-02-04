@@ -2,10 +2,13 @@ from bs4 import BeautifulSoup
 import time
 import urllib.parse
 from pathlib import Path
-from selenium import webdriver
 import random
 import os
 import yaml
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class CustomWebdriver:
@@ -20,7 +23,7 @@ class CustomWebdriver:
         if exc_type is not None:
             print("エラー内容:", exc_value)
 
-    def __init__(self, chromedriver_path, path_to_profile=None, is_headless=False, implicit_wait=0):
+    def __init__(self, chromedriver_path, path_to_profile=None, is_headless=False, implicit_wait=5):
         self._option = webdriver.ChromeOptions()
         self._path_to_profile = path_to_profile
         self._chromedriver_path = chromedriver_path
@@ -133,6 +136,10 @@ def screenshot_urls(driver, urls, path_to_directory, minimum_wait_time=3):
         save_screenshot(driver, path_to_directory=path_to_directory)
 
 
+def wait_for_element(driver, element_id, wait_time=10):
+    WebDriverWait(driver, wait_time).until(EC.presence_of_element_located((By.ID, element_id)))
+
+
 class Scraper:
     def __init__(self, path_to_config, is_headless=False):
         self._config = self._load_config(path_to_config)
@@ -153,11 +160,12 @@ class Scraper:
                           self._config["secret"]["password"])
         Form().submit(driver, self._config["login"]["selector"]["signin"])
 
-    def get_screenshot(self, filename, path_to_directory):
+    def get_screenshot(self, filename, path_to_directory, landmark_elemend_id, wait_time=10):
         with CustomWebdriver(
                 is_headless=False,
                 chromedriver_path=self._config["chrome"]["chromedriver_path"],
                 path_to_profile=self._config["chrome"]["profile_path"]) as custom_driver:
             driver = custom_driver.driver
             self._login(driver)
+            wait_for_element(driver, element_id=landmark_elemend_id, wait_time=wait_time)
             save_screenshot(driver, filename, path_to_directory)
