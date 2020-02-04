@@ -20,7 +20,7 @@ class CustomWebdriver:
         if exc_type is not None:
             print("エラー内容:", exc_value)
 
-    def __init__(self, chromedriver_path, path_to_profile=None, is_headless=False):
+    def __init__(self, chromedriver_path, path_to_profile=None, is_headless=False, implicit_wait=0):
         self._option = webdriver.ChromeOptions()
         self._path_to_profile = path_to_profile
         self._chromedriver_path = chromedriver_path
@@ -30,6 +30,8 @@ class CustomWebdriver:
         self._headless(is_headless)
         self.driver = self._initialize_webdriver(
             self._chromedriver_path, self._option)
+        if implicit_wait > 0:
+            self.driver.implicitly_wait(implicit_wait)
 
     def _set_profile(self, path_to_profile):
         if not path_to_profile:
