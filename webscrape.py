@@ -23,7 +23,8 @@ class CustomWebdriver:
         if exc_type is not None:
             print("エラー内容:", exc_value)
 
-    def __init__(self, chromedriver_path, path_to_profile=None, is_headless=False, implicit_wait=5):
+    def __init__(self, chromedriver_path, path_to_profile=None,
+                 is_headless=False, implicit_wait=5, enable_save_as_pdf=False):
         self._option = webdriver.ChromeOptions()
         self._path_to_profile = path_to_profile
         self._chromedriver_path = chromedriver_path
@@ -31,6 +32,7 @@ class CustomWebdriver:
         self._validate_path(paths)
         self._set_profile(path_to_profile)
         self._headless(is_headless)
+        self._enable_save_as_pdf(enable_save_as_pdf)
         self.driver = self._initialize_webdriver(
             self._chromedriver_path, self._option)
         if implicit_wait > 0:
@@ -47,6 +49,17 @@ class CustomWebdriver:
         if is_headless:
             self._option.add_argument('--start-maximized')
             self._option.add_argument('--headless')
+
+    def _enable_save_as_pdf(self, enable_save_as_pdf):
+        if not enable_save_as_pdf:
+            return
+        self._option.add_argument('--kiosk-printing')
+        self._option.add_experimental_option("prefs", {
+            "download.default_directory": "~/Downloads"
+        })
+
+    def save_as_pdf(self):
+        self.driver.execute_script('window.print();')
 
     def quit(self):
         self.driver.quit()
