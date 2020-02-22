@@ -4,6 +4,7 @@ import urllib.parse
 from pathlib import Path
 import random
 import os
+import re
 import yaml
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -138,6 +139,93 @@ def screenshot_urls(driver, urls, path_to_directory, minimum_wait_time=3):
 
 def wait_for_element(driver, element_id, wait_time=10):
     WebDriverWait(driver, wait_time).until(EC.presence_of_element_located((By.ID, element_id)))
+
+
+class ScreenShot:
+    def __init__(self, driver, relative_url, minimum_wait_time=3,
+                 path_to_directory=os.getcwd(), target_selector="body"):
+        self.relative_url = relative_url
+        self.driver = driver
+        self._minimum_wait_time = minimum_wait_time
+        self._path_to_directory = path_to_directory
+        self._target_selector = target_selector
+
+    def run(self):
+        self._move_to_url()
+        self._preprocess()
+        self._screenshot()
+        self._postprocess()
+
+    def _move_to_url(self):
+        move_to_url(self.driver, self.relative_url, wait_time=(self._minimum_wait_time + 2 * random.random()))
+
+    def _preprocess(self):
+        self._filename = _ScreenShotPreprocess.make_filename(self.relative_url)
+        self._path_to_img = _ScreenShotPreprocess.build_path_to_file(self._filename,
+                                                                     self._path_to_directory,
+                                                                     extension=".png")
+        self._target_element = _ScreenShotPreprocess.get_target_element(self.driver, self._target_selector)
+
+        self._path_to_raw_text = _ScreenShotPreprocess.build_path_to_file(self._filename,
+                                                                          self._path_to_directory,
+                                                                          extension=".txt")
+        self._path_to_html = _ScreenShotPreprocess.build_path_to_file(self._filename,
+                                                                      self._path_to_directory,
+                                                                      extension=".html.txt")
+
+    def _screenshot(self):
+        page_width = self.driver.execute_script('return document.body.scrollWidth')
+        page_height = self.driver.execute_script('return document.body.scrollHeight')
+        self.driver.set_window_size(page_width, page_height)
+        self._target_element.screenshot(self._path_to_img)
+
+    def _postprocess(self):
+        target_soup = _ScreenShotPostprocess.get_target_soup(self.driver.page_source, self._target_selector)
+        _ScreenShotPostprocess.save_raw_text(raw_text=target_soup.text,
+                                             path_to_file=self._path_to_raw_text,
+                                             extension=".txt")
+
+        soup = BeautifulSoup(self.drive.page_source, "lxml")
+        html = soup.prettify()
+        _ScreenShotPostprocess.save_raw_text(raw_text=html,
+                                             path_to_file=self._path_to_html,
+                                             extension=".html.txt")
+
+
+class _ScreenShotPreprocess:
+    @staticmethod
+    def make_filename(relative_url):
+        page = re.search(r"\d{3,6}", relative_url).group(0)
+        return page
+
+    @staticmethod
+    def build_path_to_file(filename, path_to_directory, extension=".png"):
+        path_to_file = Path(path_to_directory).joinpath(filename).with_suffix(extension)
+        return path_to_file
+
+    @staticmethod
+    def get_target_element(driver, target_selector):
+        soup = BeautifulSoup(driver.page_source, "lxml")
+        if target_selector and soup.select_one(target_selector):
+            return driver.find_element_by_css_selector(target_selector)
+        else:
+            return driver.find_element_by_css_selector("body")
+
+
+class _ScreenShotPostprocess:
+    @staticmethod
+    def get_target_soup(page_source, target_selector):
+        soup = BeautifulSoup(page_source, "lxml")
+        target_soup = soup.select_one(target_selector)
+        if target_soup:
+            return target_soup
+        else:
+            return soup.select_one("body")
+
+    @staticmethod
+    def save_raw_text(raw_text, path_to_file, extension=".png"):
+        with open(raw_text, "w") as f:
+            f.write(raw_text)
 
 
 class Scraper:
