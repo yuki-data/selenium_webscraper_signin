@@ -201,7 +201,7 @@ class _ScreenShotPreprocess:
     @staticmethod
     def build_path_to_file(filename, path_to_directory, extension=".png"):
         path_to_file = Path(path_to_directory).joinpath(filename).with_suffix(extension)
-        return path_to_file
+        return str(path_to_file)
 
     @staticmethod
     def get_target_element(driver, target_selector):
