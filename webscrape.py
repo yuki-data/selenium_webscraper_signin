@@ -224,7 +224,7 @@ class _ScreenShotPostprocess:
 
     @staticmethod
     def save_raw_text(raw_text, path_to_file, extension=".png"):
-        with open(raw_text, "w") as f:
+        with open(path_to_file, "w") as f:
             f.write(raw_text)
 
 
