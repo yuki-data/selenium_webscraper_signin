@@ -185,7 +185,7 @@ class ScreenShot:
                                              path_to_file=self._path_to_raw_text,
                                              extension=".txt")
 
-        soup = BeautifulSoup(self.drive.page_source, "lxml")
+        soup = BeautifulSoup(self.driver.page_source, "lxml")
         html = soup.prettify()
         _ScreenShotPostprocess.save_raw_text(raw_text=html,
                                              path_to_file=self._path_to_html,
