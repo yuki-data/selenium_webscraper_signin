@@ -142,7 +142,7 @@ def wait_for_element(driver, element_id, wait_time=10):
 
 
 class ScreenShot:
-    def __init__(self, driver, relative_url, minimum_wait_time=3,
+    def __init__(self, driver, relative_url=None, minimum_wait_time=3,
                  path_to_directory=os.getcwd(), target_selector="body"):
         self.relative_url = relative_url
         self.driver = driver
@@ -157,7 +157,10 @@ class ScreenShot:
         self._postprocess()
 
     def _move_to_url(self):
-        move_to_url(self.driver, self.relative_url, wait_time=(self._minimum_wait_time + 2 * random.random()))
+        if self.relative_url:
+            move_to_url(self.driver, self.relative_url, wait_time=(self._minimum_wait_time + 2 * random.random()))
+        else:
+            time.sleep(self._minimum_wait_time + 2 * random.random())
 
     def _preprocess(self):
         self._filename = _ScreenShotPreprocess.make_filename(self.relative_url)
