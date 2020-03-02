@@ -142,13 +142,20 @@ def wait_for_element(driver, element_id, wait_time=10):
 
 
 class ScreenShot:
-    def __init__(self, driver, relative_url=None, minimum_wait_time=3,
+    def __init__(self, driver, filename=None, relative_url=None, minimum_wait_time=3,
                  path_to_directory=os.getcwd(), target_selector="body"):
         self.relative_url = relative_url
+        self._filename = filename
         self.driver = driver
         self._minimum_wait_time = minimum_wait_time
         self._path_to_directory = path_to_directory
         self._target_selector = target_selector
+
+        self._validate_args()
+
+    def _validate_args(self):
+        if not(self.relative_url or self._filename):
+            raise ValueError("relative_url or filename must be given")
 
     def run(self):
         self._move_to_url()
@@ -163,7 +170,9 @@ class ScreenShot:
             time.sleep(self._minimum_wait_time + 2 * random.random())
 
     def _preprocess(self):
-        self._filename = _ScreenShotPreprocess.make_filename(self.relative_url)
+        if not self._filename:
+            self._filename = _ScreenShotPreprocess.make_filename(self.relative_url)
+
         self._path_to_img = _ScreenShotPreprocess.build_path_to_file(self._filename,
                                                                      self._path_to_directory,
                                                                      extension=".png")
